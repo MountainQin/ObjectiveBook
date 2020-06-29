@@ -2,6 +2,9 @@ package com.baima.objectivebook;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -38,6 +41,10 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private int currentItem;
     private TextView tv_saying;
     private List<String> sayings;
+    private MediaPlayer mediaPlayer;
+    private View TextViewtv_continuation_play;
+    private View textViewtv_continuation_play;
+    private TextView tv_continuation_play;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +57,21 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.tv_saying:
+                playSaying(false);
+                break;
+            case R.id.tv_continuation_play:
+                String s = tv_continuation_play.getText().toString();
+                if ("连续播放".equals(s)) {
+                    playSaying(true);
+                    tv_continuation_play.setText("停止播放");
+                } else {
+                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                        mediaPlayer.stop();
+                        tv_continuation_play.setText("连续播放");
+                    }
+                }
+                break;
             case R.id.tv_today_objective:
             case R.id.tv_short_objective:
             case R.id.tv_long_objective:
@@ -122,6 +144,14 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         //如果删除的对话框显示 先取消显示
         ObjectiveFragment fragment = (ObjectiveFragment) fragmentList.get(currentItem);
@@ -136,6 +166,8 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     private void initView() {
         tv_date = findViewById(R.id.tv_date);
         tv_saying = findViewById(R.id.tv_saying);
+        textViewtv_continuation_play = TextViewtv_continuation_play;
+        tv_continuation_play = findViewById(R.id.tv_continuation_play);
         view_pager = findViewById(R.id.view_pager);
         ll_tab = findViewById(R.id.ll_tab);
         TextView tv_today_objective = findViewById(R.id.tv_today_objective);
@@ -161,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         ObjectiveFragmentPagerAdapter adapter = new ObjectiveFragmentPagerAdapter(getSupportFragmentManager(), fragmentList);
         view_pager.setAdapter(adapter);
 
+        tv_saying.setOnClickListener(this);
+        tv_continuation_play.setOnClickListener(this);
         view_pager.addOnPageChangeListener(this);
         tv_today_objective.setOnClickListener(this);
         tv_short_objective.setOnClickListener(this);
@@ -194,7 +228,46 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
 
     //设置名人名言，随机
     private void setSaying() {
+        if (mediaPlayer == null || !mediaPlayer.isPlaying()) {
+            int i = new Random().nextInt(sayings.size());
+            tv_saying.setText(sayings.get(i));
+        }
+    }
+
+    private void playAssetsSound(String path, final boolean continuation) {
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+        }
+        mediaPlayer.reset();
+        try {
+            AssetFileDescriptor assetFileDescriptor = getAssets().openFd(path);
+            mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.prepareAsync();
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mediaPlayer.start();
+                    tv_continuation_play.setText("停止播放");
+                }
+            });
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    tv_continuation_play.setText("连续播放");
+                    if (continuation) {
+                        playSaying(continuation);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void playSaying(boolean continuation) {
         int i = new Random().nextInt(sayings.size());
         tv_saying.setText(sayings.get(i));
+        playAssetsSound("SayingSound/" + i + ".mp3", continuation);
     }
 }
