@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.baima.objectivebook.entities.Objective;
 import com.baima.objectivebook.util.DateFormatUtil;
+import com.baima.objectivebook.util.PackageUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -122,6 +123,8 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+        String versionName = PackageUtil.getVersionName(this, getPackageName());
+        menu.findItem(R.id.item_version).setTitle("版本：" + versionName);
         return true;
     }
 
@@ -132,6 +135,9 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
                 Intent intent = new Intent(this, AddEditActivity.class);
                 intent.putExtra(AddEditActivity.OBJECTIVE_TYPE, currentItem);
                 startActivityForResult(intent, ADD);
+                break;
+            case R.id.item_help:
+                startActivity(new Intent(this, HelpActivity.class));
                 break;
         }
         return true;
