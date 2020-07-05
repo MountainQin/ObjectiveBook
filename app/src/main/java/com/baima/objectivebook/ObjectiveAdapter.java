@@ -1,6 +1,7 @@
 package com.baima.objectivebook;
 
 import android.content.Context;
+import android.opengl.Visibility;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,28 +39,28 @@ public class ObjectiveAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder =null;
-        if (convertView==null){
-            convertView=LayoutInflater.from(context).inflate(R.layout.item_objective, null);
-            holder =new ViewHolder();
-            holder.tv_title=convertView.findViewById(R.id.tv_title);
-            holder.tv_status=convertView.findViewById(R.id.tv_status);
+        ViewHolder holder = null;
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_objective, null);
+            holder = new ViewHolder();
+            holder.tv_title = convertView.findViewById(R.id.tv_title);
+            holder.tv_status = convertView.findViewById(R.id.tv_status);
             convertView.setTag(holder);
-        }else{
-            holder= (ViewHolder) convertView.getTag();
+        } else {
+            holder = (ViewHolder) convertView.getTag();
         }
 
         Objective objective = objectiveList.get(position);
         holder.tv_title.setText(objective.getTitle());
-        if (objective.isFinish()){
-            holder.tv_status.setText("已完成");
+        if (objective.isFinish()) {
+            holder.tv_status.setVisibility(View.VISIBLE);
         }else{
-            holder.tv_status.setText("未完成");
+            holder.tv_status.setVisibility(View.GONE);
         }
         return convertView;
     }
 
-    static class ViewHolder{
+    static class ViewHolder {
         TextView tv_title;
         TextView tv_status;
     }
